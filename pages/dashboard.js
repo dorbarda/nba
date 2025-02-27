@@ -4,30 +4,8 @@ import { useRouter } from 'next/router';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
-
-// This would normally be in a separate component file
-const Navbar = ({ user, signOut }) => {
-  return (
-    <nav className="bg-gray-800 text-white p-4">
-      <div className="container mx-auto flex justify-between items-center">
-        <a href="/" className="text-xl font-bold">NBA Playoff Predictions</a>
-
-        <div className="flex items-center space-x-4">
-          {user && (
-            <>
-              <span className="hidden md:inline">Hello, {user.email}</span>
-              <button 
-                onClick={signOut} 
-                className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm"
-              >
-                Sign Out
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-    </nav>
-  );
+import Navbar from '../components/Navbar';
+import Leaderboard from '../components/Leaderboard';
 };
 
 // Sample data - In a real app, this would come from your database
@@ -150,7 +128,7 @@ export default function Dashboard() {
         <title>Dashboard | NBA Playoff Predictions</title>
       </Head>
 
-      <Navbar user={user} signOut={handleSignOut} />
+      <Navbar user={user} />
 
       <div className="container mx-auto p-4">
         <h1 className="text-2xl font-bold mb-6">Your Predictions Dashboard</h1>
@@ -201,8 +179,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Prediction Form & User Info */}
-          <div>
+          {/* Right Column: Prediction Form & Leaderboard */}
+          <div className="space-y-6">
+            {/* Prediction Form */}
             {selectedSeries ? (
               <div className="border p-4 rounded-lg">
                 <h2 className="text-lg font-semibold mb-3">
@@ -251,7 +230,7 @@ export default function Dashboard() {
             )}
 
             {/* User Stats */}
-            <div className="border p-4 rounded-lg mt-6">
+            <div className="border p-4 rounded-lg">
               <h2 className="text-lg font-semibold mb-2">Your Stats</h2>
               <div className="space-y-2">
                 <p>Total Predictions: {predictions.length}</p>
@@ -259,6 +238,9 @@ export default function Dashboard() {
                 <p>Rank: --</p>
               </div>
             </div>
+
+            {/* Leaderboard */}
+            <Leaderboard currentUserId={user?.uid} />
           </div>
         </div>
       </div>
