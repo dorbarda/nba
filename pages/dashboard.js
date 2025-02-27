@@ -6,7 +6,6 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
 import Navbar from '../components/Navbar';
 import Leaderboard from '../components/Leaderboard';
-};
 
 // Sample data - In a real app, this would come from your database
 const sampleSeries = [
