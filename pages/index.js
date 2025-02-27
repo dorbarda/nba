@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { auth } from '../firebase'; // Import auth from your firebase.js file
 import { onAuthStateChanged } from 'firebase/auth';
@@ -29,12 +30,10 @@ export default function Home() {
         <h1 className="text-4xl font-bold mb-4">NBA Playoff Predictions</h1>
         <p className="text-xl mb-8">Make predictions for NBA playoff series with your friends!</p>
 
-        <div className="mb-12">
-          <img 
-            src="https://via.placeholder.com/600x300?text=NBA+Playoffs" 
-            alt="NBA Playoffs" 
-            className="rounded-lg shadow-lg"
-          />
+        <div className="mb-12 relative w-[600px] h-[300px]">
+          <div className="bg-gray-200 rounded-lg w-full h-full flex items-center justify-center">
+            <p className="text-gray-600">NBA Playoffs Image</p>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 max-w-lg">
