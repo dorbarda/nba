@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   if (cached) return res.status(200).json(cached);
 
   try {
-    const data = await fetchFromESPN(["mTeam", "mScoreboard", "mMatchupScore"]);
+    const data = await fetchFromESPN(["mTeam", "mSettings", "mMatchup", "mMatchupScore"]);
     const currentWeek = getCurrentWeek(data);
     const totalWeeks = getTotalWeeks(data);
     const matchups = parseMatchups(data, currentWeek);
