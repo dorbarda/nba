@@ -1,87 +1,97 @@
-import Head from 'next/head';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useEffect, useState } from 'react';
-import { auth } from '../firebase'; // Import auth from your firebase.js file
-import { onAuthStateChanged } from 'firebase/auth';
+import Head from "next/head";
+import Link from "next/link";
+import Navbar from "../components/Navbar";
+import StandingsTable from "../components/StandingsTable";
+import MatchupCard from "../components/MatchupCard";
 
-export default function Home() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+export async function getServerSideProps(context) {
+  const proto = context.req.headers["x-forwarded-proto"] || "http";
+  const host = context.req.headers.host;
+  const base = `${proto}://${host}`;
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
+  try {
+    const [standingsRes, scoreboardRes] = await Promise.all([
+      fetch(`${base}/api/espn/standings`),
+      fetch(`${base}/api/espn/scoreboard`),
+    ]);
 
-    return () => unsubscribe();
-  }, []);
+    const standings = standingsRes.ok ? await standingsRes.json() : [];
+    const scoreboard = scoreboardRes.ok
+      ? await scoreboardRes.json()
+      : { currentWeek: 1, totalWeeks: 20, matchups: [] };
+
+    return { props: { standings, scoreboard } };
+  } catch {
+    return {
+      props: {
+        standings: [],
+        scoreboard: { currentWeek: 1, totalWeeks: 20, matchups: [] },
+      },
+    };
+  }
+}
+
+export default function Home({ standings, scoreboard }) {
+  const { currentWeek, totalWeeks, matchups } = scoreboard;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-navy">
       <Head>
-        <title>NBA Playoff Predictions</title>
-        <meta name="description" content="Predict NBA playoff series outcomes with friends" />
+        <title>Shaqtin&apos; A Winner Fantasy League</title>
+        <meta name="description" content="Your NBA fantasy league home base" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="flex flex-col items-center justify-center min-h-screen text-center">
-        <h1 className="text-4xl font-bold mb-4">NBA Playoff Predictions</h1>
-        <p className="text-xl mb-8">Make predictions for NBA playoff series with your friends!</p>
+      <Navbar currentWeek={currentWeek} />
 
-        <div className="mb-12 relative w-[600px] h-[300px]">
-          <div className="bg-gray-200 rounded-lg w-full h-full flex items-center justify-center">
-            <p className="text-gray-600">NBA Playoffs Image</p>
-          </div>
+      <main className="max-w-5xl mx-auto px-4 py-8">
+        {/* Hero */}
+        <div className="text-center mb-10">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+            🏀 Shaqtin&apos; A Winner
+          </h1>
+          <p className="text-gray-400 text-sm">
+            ESPN H2H Points League &middot; 10 Teams &middot; 2025–26 Season
+          </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 max-w-lg">
-          {user ? (
-            <>
-              <Link href="/dashboard">
-                <a className="bg-blue-600 text-white py-3 px-6 rounded-lg font-medium shadow hover:bg-blue-700 transition">
-                  Go to Dashboard
-                </a>
-              </Link>
-              <button 
-                onClick={() => auth.signOut()} 
-                className="bg-gray-200 text-gray-800 py-3 px-6 rounded-lg font-medium shadow hover:bg-gray-300 transition"
-              >
-                Sign Out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link href="/login">
-                <a className="bg-blue-600 text-white py-3 px-6 rounded-lg font-medium shadow hover:bg-blue-700 transition">
-                  Log In
-                </a>
-              </Link>
-              <Link href="/login?signup=true">
-                <a className="bg-gray-200 text-gray-800 py-3 px-6 rounded-lg font-medium shadow hover:bg-gray-300 transition">
-                  Sign Up
-                </a>
-              </Link>
-            </>
-          )}
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          {/* Standings */}
+          <section className="lg:col-span-3">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-white">Standings</h2>
+              <span className="text-xs text-gray-500">
+                Week {currentWeek} of {totalWeeks}
+              </span>
+            </div>
+            <StandingsTable standings={standings} />
+          </section>
 
-        <div className="mt-16 max-w-xl text-left">
-          <h2 className="text-2xl font-bold mb-4">How It Works</h2>
-          <ol className="space-y-3 list-decimal list-inside">
-            <li>Create an account or log in</li>
-            <li>View the current NBA playoff matchups</li>
-            <li>Predict the outcome of each series (4-0, 4-1, 4-2, or 4-3)</li>
-            <li>Earn points when your predictions are correct</li>
-            <li>Compete with friends on the leaderboard</li>
-          </ol>
+          {/* Current week matchups */}
+          <section className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-white">
+                Week {currentWeek} Matchups
+              </h2>
+              <Link href="/matchups">
+                <span className="text-xs text-gold hover:underline cursor-pointer">
+                  All weeks →
+                </span>
+              </Link>
+            </div>
+
+            {matchups.length === 0 ? (
+              <p className="text-gray-400 text-sm">No matchup data available.</p>
+            ) : (
+              <div className="space-y-3">
+                {matchups.map((m, i) => (
+                  <MatchupCard key={i} matchup={m} />
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </main>
-
-      <footer className="mt-16 text-center text-gray-500">
-        <p>© {new Date().getFullYear()} NBA Playoff Predictions</p>
-      </footer>
     </div>
   );
 }
